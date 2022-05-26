@@ -1,0 +1,28 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/skiplist.h
+iostream
+-
+cstdlib
+-
+cmath
+-
+cstring
+-
+mutex
+-
+fstream
+-
+
+/home/jwf/SkipList/src/main.cpp
+iostream
+-
+skiplist.h
+/home/jwf/SkipList/src/skiplist.h
+
