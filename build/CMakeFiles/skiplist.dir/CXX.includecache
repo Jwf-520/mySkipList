@@ -20,9 +20,9 @@ mutex
 fstream
 -
 
-/home/jwf/SkipList/src/main.cpp
+/home/jwf/SkipList/mySkipList/src/main.cpp
 iostream
 -
 skiplist.h
-/home/jwf/SkipList/src/skiplist.h
+/home/jwf/SkipList/mySkipList/src/skiplist.h
 

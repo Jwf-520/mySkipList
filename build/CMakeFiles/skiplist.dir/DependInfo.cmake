@@ -4,7 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/jwf/SkipList/src/main.cpp" "/home/jwf/SkipList/build/CMakeFiles/skiplist.dir/src/main.cpp.o"
+  "/home/jwf/SkipList/mySkipList/src/main.cpp" "/home/jwf/SkipList/mySkipList/build/CMakeFiles/skiplist.dir/src/main.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

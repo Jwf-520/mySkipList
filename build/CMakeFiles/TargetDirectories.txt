@@ -1,3 +1,3 @@
-/home/jwf/SkipList/build/CMakeFiles/rebuild_cache.dir
-/home/jwf/SkipList/build/CMakeFiles/skiplist.dir
-/home/jwf/SkipList/build/CMakeFiles/edit_cache.dir
+/home/jwf/SkipList/mySkipList/build/CMakeFiles/rebuild_cache.dir
+/home/jwf/SkipList/mySkipList/build/CMakeFiles/skiplist.dir
+/home/jwf/SkipList/mySkipList/build/CMakeFiles/edit_cache.dir

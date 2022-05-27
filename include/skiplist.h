@@ -16,7 +16,7 @@ class Node {
 public:
     Node() {}
     Node(K k, V v, int);
-    ~Node() {};
+    ~Node();
     K get_key() const;
     V get_value() const;
     void set_value(V);
@@ -38,7 +38,7 @@ Node<K, V>::Node(const K k, const V v, int level) {
     //level + 1,因为数组索引是从0 - level
     this->forward = new Node<K, V>*[level + 1];
     //填充forward数组为0
-    memset(this->forward, 0, sizeof(Node(K, V)*)*(level + 1));
+    memset(this->forward, 0, sizeof(Node<K, V>*) * (level + 1));
 };
 
 template<class K, class V> 
@@ -114,7 +114,7 @@ SkipList<K, V>::~SkipList() {
     if (_file_reader.is_open()) {
         _file_reader.close();
     }
-    delete _header;
+    delete _header; //将头结点进行释放
 }
 
 
@@ -126,32 +126,18 @@ Node<K, V>* SkipList<K, V>::create_node(const K k, const V v, int level) {
     return n;
 }
 
+//跳表元素个数
+template<class K, class V>
+int SkipList<K, V>::size() {
+    return _element_count;
+}
 
 
-//跳表元素查找
+
+//查找键值对
 /*
 从当前最大的层数开始找，如果要查找的键比cur的下一个节点的键值大，cur就往后移动
 找到大于等于key的第一个节点，如果那个节点等于key，就说明找到了，否则没有该key
-*/
-
-// Search for element in skip list 
-/*
-                           +------------+
-                           |  select 60 |
-                           +------------+
-level 4     +-->1+                                                      100
-                 |
-                 |
-level 3         1+-------->10+------------------>50+           70       100
-                                                   |
-                                                   |
-level 2         1          10         30         50|           70       100
-                                                   |
-                                                   |
-level 1         1    4     10         30         50|           70       100
-                                                   |
-                                                   |
-level 0         1    4   9 10         30   40    50+-->60      70       100
 */
 template<typename K, typename V> 
 bool SkipList<K, V>::search_element(K key) {
@@ -182,25 +168,6 @@ bool SkipList<K, V>::search_element(K key) {
 //插入给定的键值对到跳表中
 //返回值为1代表插入元素已经存在
 //返回值为0代表插入元素成功
-/*
-                           +------------+
-                           |  insert 50 |
-                           +------------+
-level 4     +-->1+                                                      100
-                 |
-                 |                      insert +----+
-level 3         1+-------->10+---------------> | 50 |          70       100
-                                               |    |
-                                               |    |
-level 2         1          10         30       | 50 |          70       100
-                                               |    |
-                                               |    |
-level 1         1    4     10         30       | 50 |          70       100
-                                               |    |
-                                               |    |
-level 0         1    4   9 10         30   40  | 50 |  60      70       100
-                                               +----+
-*/
 
 template<class K, class V>
 int SkipList<K, V>::insert_element(const K key, const V value) {
@@ -263,6 +230,7 @@ int SkipList<K, V>::insert_element(const K key, const V value) {
     mtx.unlock();
     return 0;
 }
+//随机获取一层
 template<typename K, typename V>
 int SkipList<K, V>::get_random_level(){
 
@@ -273,6 +241,127 @@ int SkipList<K, V>::get_random_level(){
     k = (k < _max_level) ? k : _max_level;
     return k;
 };
+//删除键值对
+template<typename K, typename V> 
+void SkipList<K, V>::delete_element(K key) {
+
+    mtx.lock();
+    Node<K, V> *current = this->_header; 
+    Node<K, V> *update[_max_level+1];
+    memset(update, 0, sizeof(Node<K, V>*)*(_max_level+1));
+    
+    //从链表的最高层开始查找
+    for (int i = _skip_list_level; i >= 0; i--) {
+        while (current->forward[i] !=NULL && current->forward[i]->get_key() < key) {
+            current = current->forward[i];
+        }
+        update[i] = current;
+    }
+
+    current = current->forward[0];
+    if (current != NULL && current->get_key() == key) {
+       
+        //从最底层开始删除，然后删除每层该元素的索引
+        for (int i = 0; i <= _skip_list_level; i++) {
+
+            //如果在第i层，下一个节点不是目标节点，那吗跳出循环。
+            if (update[i]->forward[i] != current) 
+                break;
+            update[i]->forward[i] = current->forward[i];
+        }
+
+        // 当最高层无元素索引的时候，删除该层。
+        while (_skip_list_level > 0 && _header->forward[_skip_list_level] == 0) {
+            _skip_list_level --; 
+        }
+
+        std::cout << "Successfully deleted key "<< key << std::endl;
+        _element_count --;
+    } else {
+        std::cout << "can't find key, delete failed!" << std::endl;
+    }
+    mtx.unlock();
+    return;
+}
+
+// 展示跳表每层索引元素
+template<typename K, typename V> 
+void SkipList<K, V>::display_list() {
+
+    std::cout << "\n*****Skip List*****"<<"\n"; 
+    for (int i = 0; i <= _skip_list_level; i++) {
+        Node<K, V> *node = this->_header->forward[i]; 
+        std::cout << "Level " << i << ": ";
+        while (node != NULL) {
+            std::cout << node->get_key() << ":" << node->get_value() << ";";
+            node = node->forward[i];
+        }
+        std::cout << std::endl;
+    }
+}
+
+// 将内存的数据存储到文件中 
+template<typename K, typename V> 
+void SkipList<K, V>::dump_file() {
+
+    std::cout << "dump_file-----------------" << std::endl;
+    _file_writer.open(STORE_FILE);
+    Node<K, V> *node = this->_header->forward[0]; 
+
+    while (node != NULL) {
+        _file_writer << node->get_key() << ":" << node->get_value() << "\n";
+        std::cout << node->get_key() << ":" << node->get_value() << ";\n";
+        node = node->forward[0];
+    }
+
+    _file_writer.flush();
+    _file_writer.close();
+    return ;
+}
+
+//从磁盘上加载数据
+template<typename K, typename V> 
+void SkipList<K, V>::load_file() {
+
+    _file_reader.open(STORE_FILE);
+    std::cout << "load_file-----------------" << std::endl;
+    std::string line;
+    std::string* key = new std::string();
+    std::string* value = new std::string();
+    while (getline(_file_reader, line)) {
+        get_key_value_from_string(line, key, value);
+        if (key->empty() || value->empty()) {
+            continue;
+        }
+        insert_element(*key, *value);
+        std::cout << "key:" << *key << "value:" << *value << std::endl;
+    }
+    _file_reader.close();
+}
+
+template<typename K, typename V>
+void SkipList<K, V>::get_key_value_from_string(const std::string& str, std::string* key, std::string* value) {
+
+    if(!is_valid_string(str)) {
+        return;
+    }
+    *key = str.substr(0, str.find(delimiter));
+    *value = str.substr(str.find(delimiter)+1, str.length());
+}
+template<typename K, typename V>
+bool SkipList<K, V>::is_valid_string(const std::string& str) {
+
+    if (str.empty()) {
+        return false;
+    }
+    //未发现":"返回false
+    if (str.find(delimiter) == std::string::npos) {
+        return false;
+    }
+    return true;
+}
+
+
 
 
 

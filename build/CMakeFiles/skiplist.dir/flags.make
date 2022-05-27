@@ -6,5 +6,5 @@ CXX_FLAGS =
 
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/jwf/SkipList/include 
+CXX_INCLUDES = -I/home/jwf/SkipList/mySkipList/include 
 
